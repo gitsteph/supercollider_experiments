@@ -1,4 +1,6 @@
-// supercolliding round-robin canon in d (~30 seconds)
+// supercolliding round-robin canon in d (~50 seconds)
+// created by stephanie andrews
+// 25 november 2018
 
 
 // Server config and boot
@@ -34,7 +36,7 @@ t = TempoClock(76/60); // currently unused
 
 // Creating some instruments
 SynthDef(
-	\harpsi, // as defined by scd docs
+	\harpsi1, // as defined by scd docs
 	{
 		|outbus = 0, freq = 440, amp = 0.1, gate = 1|
 		var out;
@@ -44,7 +46,7 @@ SynthDef(
 ).add;
 
 SynthDef(
-	\harpsi2, // slightly modified
+	\harpsi2, // slightly modified from harspi1
 	{
 		|outbus = 0, freq = 440, amp = 0.1, gate = 1|
 		var out;
@@ -74,28 +76,16 @@ SynthDef(
 ).add;
 
 // Defining patterns
-// TODO: DRY Pbind code
-
-~randomStartingNotes;
-~randomStartingNotes = {
-	arg instrument, scale, dur, amp;
+~corePbindFunc;
+~corePbindFunc = {
+	arg instrument, scale, dur, amp, pattern;
 	Pbind(
 		\instrument,
 		instrument,
 		\scale,
 		scale,
 		\note,
-		Pshuf([
-			~dmaj['D'],
-			~dmaj['A'],
-			~dmaj['Bm'],
-			~dmaj['F#m'],
-			~dmaj['G'],
-			~dmaj['D'],
-			~dmaj['G'],
-			~dmaj['A'],
-			Rest(96)
-		], 2),
+		pattern,
 		\dur,
 		dur,
 		\amp,
@@ -103,97 +93,87 @@ SynthDef(
 	).play;
 };
 
-~longSingleNotes;
-~longSingleNotes = {
-	arg instrument, scale, dur, amp;
-	Pbind(
-		\instrument,
-		instrument,
-		\scale,
-		scale,
-		\note,
-		Pseq([
-			Rest(36),
-			~dmaj['D'][0],
-			~dmaj['A'][0],
-			~dmaj['Bm'][0],
-			~dmaj['F#m'][0],
-			~dmaj['G'][0],
-			~dmaj['D'][0],
-			~dmaj['G'][0],
-			~dmaj['A'][0]
-		], 4),
-		\dur,
-		dur,
-		\amp,
-		amp
-	).play;
-};
+~randomStartingNotesPattern01;
+~randomStartingNotesPattern01 =
+Prand([
+	~dmaj['D'],
+	~dmaj['A'],
+	~dmaj['Bm'],
+	~dmaj['F#m'],
+	~dmaj['G'],
+	~dmaj['D'],
+	~dmaj['G'],
+	~dmaj['A'],
+	Rest(96)
+], 4);
 
-~longChords;
-~longChords = {
-	arg instrument, scale, dur, amp;
-	Pbind(
-		\instrument,
-		instrument,
-		\scale,
-		scale,
-		\note,
-		Pser([
-			~dmaj['D'],
-			~dmaj['A'],
-			~dmaj['Bm'],
-			~dmaj['F#m'],
-			~dmaj['G'],
-			~dmaj['D'],
-			~dmaj['G'],
-			~dmaj['A'],
-		], 16),
-		\dur,
-		dur,
-		\amp,
-		amp
-	).play;
-};
+~randomStartingNotesPattern02;
+~randomStartingNotesPattern02 =
+Pshuf([
+	~dmaj['D'],
+	~dmaj['A'],
+	~dmaj['Bm'],
+	~dmaj['F#m'],
+	~dmaj['G'],
+	~dmaj['D'],
+	~dmaj['G'],
+	~dmaj['A'],
+	Rest(96)
+], 2);
 
-~shortChords;
-~shortChords = {
-	arg instrument, scale, dur, amp;
-	Pbind(
-		\instrument,
-		instrument,
-		\scale,
-		scale,
-		\note,
-		Pseq([
-			~dmaj['D'],
-			~dmaj['D'],
-			~dmaj['A'],
-			~dmaj['A'],
-			~dmaj['Bm'],
-			~dmaj['Bm'],
-			~dmaj['F#m'],
-			~dmaj['F#m'],
-			~dmaj['G'],
-			~dmaj['G'],
-			~dmaj['D'],
-			~dmaj['D'],
-			~dmaj['G'],
-			~dmaj['G'],
-			~dmaj['A'],
-			~dmaj['A'],
-		], 2),
-		\dur,
-		dur,
-		\amp,
-		amp
-	).play;
-};
+~longSingleNotesPattern;
+~longSingleNotesPattern =
+Pseq([
+	Rest(36),
+	~dmaj['D'][0],
+	~dmaj['A'][0],
+	~dmaj['Bm'][0],
+	~dmaj['F#m'][0],
+	~dmaj['G'][0],
+	~dmaj['D'][0],
+	~dmaj['G'][0],
+	~dmaj['A'][0]
+], 4);
+
+~longChordsPattern;
+~longChordsPattern =
+Pser([
+	~dmaj['D'],
+	~dmaj['A'],
+	~dmaj['Bm'],
+	~dmaj['F#m'],
+	~dmaj['G'],
+	~dmaj['D'],
+	~dmaj['G'],
+	~dmaj['A'],
+], 16);
+
+~shortChordsPattern;
+~shortChordsPattern =
+Pseq([
+	~dmaj['D'],
+	~dmaj['D'],
+	~dmaj['A'],
+	~dmaj['A'],
+	~dmaj['Bm'],
+	~dmaj['Bm'],
+	~dmaj['F#m'],
+	~dmaj['F#m'],
+	~dmaj['G'],
+	~dmaj['G'],
+	~dmaj['D'],
+	~dmaj['D'],
+	~dmaj['G'],
+	~dmaj['G'],
+	~dmaj['A'],
+	~dmaj['A'],
+], 2);
 
 
 // Playing defined patterns
-~randomStartingNotes.value(\default, ~selectedScales.choose, 1.5, 0.05);
-~longSingleNotes.value(\weirdsynth2, ~selectedScales.choose, 1.5, 0.1);
-SystemClock.sched(12, {~longChords.value(\harpsi2, ~selectedScales.choose, 1.5, 0.2)});
-SystemClock.sched(24, {~shortChords.value(\weirdsynth1, ~selectedScales.choose, 0.75, 0.3)});
+~corePbindFunc.value(\default, ~selectedScales.choose, 3, 0.05, ~randomStartingNotesPattern01);
+~corePbindFunc.value(\default, ~selectedScales.choose, 1.5, 0.05, ~randomStartingNotesPattern02);
+~corePbindFunc.value(\weirdsynth2, ~selectedScales.choose, 1.5, 0.1, ~longSingleNotesPattern);
+SystemClock.sched(12, {~corePbindFunc.value(\harpsi2, ~selectedScales.choose, 1.5, 0.2, ~longChordsPattern)});
+SystemClock.sched(24, {~corePbindFunc.value(\weirdsynth1, ~selectedScales.choose, 0.75, 0.3, ~shortChordsPattern)});
 )
